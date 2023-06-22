@@ -1,1 +1,3 @@
-zig-out
+.zig-out
+*.exe
+*.obj
