@@ -41,9 +41,9 @@ pub fn main() !void {
     // =======================
     print("Read time\n", .{});
     timer.reset();
-    for (0..gol.cells.len - 1) |o| {
-        for (0..gol.cells[0].len - 1) |p| {
-            out_board[o][p] = gol.cells[o][p];
+    for (0..DIMESIONS[0] - 1) |o| {
+        for (0..DIMESIONS[1] - 1) |p| {
+            out_board[o][p] = @bitCast(bool, gol.cells[o][p]);
         }
     }
     read_time = timer.lap();
@@ -91,19 +91,19 @@ inline fn printBoard(board: [DIMESIONS[0]][DIMESIONS[1]]bool) void {
 fn GameOfLife(comptime x: usize, comptime y: usize) type {
     return struct {
         const Self = @This();
-        cells: [x][y]bool,
+        cells: [x]@Vector(y, u1),
         iteration: u32,
         
         pub fn init() Self {
             return Self {
-                .cells = [_][y]bool{[_]bool{false} ** y} ** x,
+                .cells = [_]@Vector(y, u1){@splat(y, @as(u1, 0))} ** x,
                 .iteration = 0,
             };
         }
 
         pub fn switchCells(self: *Self, cells_to_set: [][2]usize) void {
             for (cells_to_set) |cell| {
-                self.cells[cell[0]][cell[1]] = !self.cells[cell[0]][cell[1]];
+                self.cells[cell[0]][cell[1]] = ~self.cells[cell[0]][cell[1]];
             }
         }
 
@@ -116,38 +116,38 @@ fn GameOfLife(comptime x: usize, comptime y: usize) type {
             // TODO: make it use vectors
 
             // calculating number of living neighbours
-            inline for (1..self.cells.len - 2) |i| {
-                for (1..self.cells[0].len - 2) |j| {
+            inline for (1..x - 2) |i| {
+                for (1..y - 2) |j| {
                     // horizontal and vertical shifts
-                    neighbours[i - 1][j] += @boolToInt(self.cells[i][j]); // left  shift
-                    neighbours[i + 1][j] += @boolToInt(self.cells[i][j]); // right shift
-                    neighbours[i][j - 1] += @boolToInt(self.cells[i][j]); // up    shift
-                    neighbours[i][j + 1] += @boolToInt(self.cells[i][j]); // down  shift
+                    neighbours[i - 1][j] += self.cells[i][j]; // left  shift
+                    neighbours[i + 1][j] += self.cells[i][j]; // right shift
+                    neighbours[i][j - 1] += self.cells[i][j]; // up    shift
+                    neighbours[i][j + 1] += self.cells[i][j]; // down  shift
                 
                     // diagonal shifts
-                    neighbours[i - 1][j - 1] += @boolToInt(self.cells[i][j]); // left  up   shift
-                    neighbours[i + 1][j - 1] += @boolToInt(self.cells[i][j]); // right up   shift
-                    neighbours[i - 1][j + 1] += @boolToInt(self.cells[i][j]); // left  down shift
-                    neighbours[i + 1][j + 1] += @boolToInt(self.cells[i][j]); // right down shift
+                    neighbours[i - 1][j - 1] += self.cells[i][j]; // left  up   shift
+                    neighbours[i + 1][j - 1] += self.cells[i][j]; // right up   shift
+                    neighbours[i - 1][j + 1] += self.cells[i][j]; // left  down shift
+                    neighbours[i + 1][j + 1] += self.cells[i][j]; // right down shift
                 }
             }
 
             // switching cells
-            inline for (0..self.cells.len - 1) |i| {
-                for (0..self.cells[0].len - 1) |j| {
+            inline for (0..x - 1) |i| {
+                for (0..y - 1) |j| {
                     var cell_neighbours = neighbours[i][j];
 
                     // 1. Any live cell with fewer than two live neighbours dies, as if by underpopulation
-                    if (cell_neighbours < 2 and self.cells[i][j] == true) { self.cells[i][j] = false; }
+                    if (cell_neighbours < 2 and self.cells[i][j] == 1) { self.cells[i][j] = 0; }
 
                     // 2. Any live cell with two or three live neighbours lives on to the next generation.
                     // NO-OP
 
                     // 3. Any live cell with more than three live neighbours dies, as if by overpopulation.
-                    if (cell_neighbours > 3 and self.cells[i][j] == true) { self.cells[i][j] = false; }
+                    if (cell_neighbours > 3 and self.cells[i][j] == 1) { self.cells[i][j] = 0; }
 
                     // 4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction
-                    if (cell_neighbours == 3 and self.cells[i][j] == false) { self.cells[i][j] = true; }
+                    if (cell_neighbours == 3 and self.cells[i][j] == 0) { self.cells[i][j] = 0; }
                 }
             }
         }
