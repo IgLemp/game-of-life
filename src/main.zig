@@ -44,7 +44,7 @@ pub fn main() !void {
     var print_time: u64 = 0;
     
     var out_board = [_][HEIGHT]bool{[_]bool{false} ** HEIGHT} ** WIDTH;
-    std.debug.print("board size: {d}x{d}", .{WIDTH, HEIGHT});
+    std.debug.print("board size: {d}x{d}\n", .{WIDTH, HEIGHT});
 
     // =======================
     timer.reset();
